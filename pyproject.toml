@@ -1,0 +1,23 @@
+[project]
+name = "surveillance-orchestrator"
+version = "0.1.0"
+description = "Système de surveillance intelligente orchestré par VLM (KIM)"
+authors = [
+    { name="Elfried Kinzoun", email="ekfriedkinzoun@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "accelerate>=1.9.0",
+    "bitsandbytes>=0.46.1",
+    "blobfile>=3.0.0",
+    "git-filter-repo>=2.47.0",
+    "opencv-python>=4.12.0.88",
+    "pillow>=11.3.0",
+    "protobuf>=6.31.1",
+    "tiktoken>=0.9.0",
+    "torch>=2.7.1",
+    "torchvision>=0.22.1",
+    "transformers>=4.53.3",
+    "ultralytics>=8.3.169",
+]

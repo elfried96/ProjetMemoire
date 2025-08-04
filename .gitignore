@@ -1,6 +1,7 @@
 #je veux ignorer les vides les fichier .mp4 , l'environement virtuelle et les craches
 *.mp4
 .venv
+.venv1
 *.pyc
 __pycache__/
 *.pyo

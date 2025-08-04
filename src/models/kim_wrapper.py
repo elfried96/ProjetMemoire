@@ -1,21 +1,19 @@
-# src/models/kim_wrapper.py
-
 import torch
+import gc
+import cv2
 from PIL import Image
 from transformers import AutoProcessor, AutoModelForCausalLM
-from utils.preprocessing import preprocess_frame
-import cv2
-import gc
-
+from utils.preprocessing import prepr
 class KIMWrapper:
-    def __init__(self, model_name="moonshotai/Kimi-VL-A3B-Thinking-2506", device=None):
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    def __init__(self, model_name="moonshotai/Kimi-VL-A3B-Thinking-2506"):
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.processor = AutoProcessor.from_pretrained(model_name, trust_remote_code=True)
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
             trust_remote_code=True,
-            load_in_8bit=True
-        ).to(self.device)
+            device_map="auto",
+            torch_dtype=torch.float16
+        )
         self.prompt_template = """
 Vous êtes un système de surveillance intelligente. Analysez cette image de magasin.
 CONTEXTE: {store_section}, {time_of_day}, {crowd_density}
@@ -40,7 +38,7 @@ RÉPONSE ATTENDUE:
 }}
         """.strip()
 
-    def extract_frames(self, video_path, seconds_per_frame=2):
+    def extract_frames(self, video_path, seconds_per_frame=2, max_frames=5):
         vidcap = cv2.VideoCapture(video_path)
         fps = vidcap.get(cv2.CAP_PROP_FPS)
         frame_interval = int(fps * seconds_per_frame)
@@ -48,7 +46,7 @@ RÉPONSE ATTENDUE:
         frames = []
         success, image = vidcap.read()
         count = 0
-        while success:
+        while success and len(frames) < max_frames:
             if count % frame_interval == 0:
                 rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 pil_image = Image.fromarray(rgb_image)
@@ -84,18 +82,12 @@ RÉPONSE ATTENDUE:
 
             prompt = self.generate_prompt(section, time_of_day, crowd_density)
 
-            messages = [{
-                "role": "user",
-                "content": [{"type": "image"} for _ in frames] + [
-                    {"type": "text", "text": prompt}
-                ],
-            }]
+            inputs = self.processor(
+                images=frames,
+                text=prompt,
+                return_tensors="pt"
+            ).to(self.device)
 
-            # Génération des inputs
-            text_input = self.processor.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
-            inputs = self.processor(images=frames, text=text_input, return_tensors="pt").to(self.device)
-
-            # Inférence du modèle
             with torch.no_grad():
                 generated_ids = self.model.generate(**inputs, max_new_tokens=1024, temperature=0.7)
 
@@ -112,12 +104,12 @@ RÉPONSE ATTENDUE:
             }
 
         finally:
-            # Libérer proprement la mémoire
             self.cleanup()
 
     def cleanup(self):
         print("🧹 Libération des ressources...")
         del self.model
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         gc.collect()
         print("✅ Mémoire GPU/CPU nettoyée.")

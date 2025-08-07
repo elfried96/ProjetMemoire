@@ -1,0 +1,126 @@
+site_name: Surveillance Orchestrator
+site_description: Système de surveillance intelligente utilisant des modèles VLM et LLM
+site_author: Elfried Kinzoun
+site_url: https://surveillance-orchestrator.readthedocs.io
+
+repo_name: surveillance_orchestrator
+repo_url: https://github.com/kinzoun/surveillance_orchestrator
+
+theme:
+  name: material
+  language: fr
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/weather-night
+        name: Mode sombre
+    - scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/weather-sunny
+        name: Mode clair
+  
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.annotate
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_source: true
+
+nav:
+  - Accueil: index.md
+  - Installation: installation.md
+  - Guide Utilisateur:
+    - Démarrage Rapide: user-guide/quickstart.md
+    - Utilisation Avancée: user-guide/advanced.md
+    - Configuration: user-guide/configuration.md
+  - Architecture:
+    - Vue d'ensemble: architecture/overview.md
+    - Modèles: architecture/models.md
+    - Orchestrateur: architecture/orchestrator.md
+    - Preprocessing: architecture/preprocessing.md
+  - API:
+    - Configuration: api/config.md
+    - Modèles: api/models.md
+    - Orchestrateur: api/orchestrator.md
+    - Utilitaires: api/utils.md
+  - Exemples:
+    - Scripts de base: examples/basic.md
+    - Cas d'usage avancés: examples/advanced.md
+  - Déploiement: deployment.md
+  - FAQ: faq.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: kinzoun
+      repo: surveillance_orchestrator
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/kinzoun/surveillance_orchestrator
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/surveillance-orchestrator
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+copyright: Copyright &copy; 2025 Elfried Kinzoun

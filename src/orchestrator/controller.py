@@ -12,6 +12,7 @@ from ..models import create_vlm_model, create_llm_model, model_manager
 from ..models.base import AnalysisResult, SuspicionAnalysis
 from ..utils.preprocessing import video_processor
 from ..utils.memory_optimizer import memory_monitor, memory_optimizer
+from .memory_engine import IntelligentMemoryManager
 from ..config import settings, ModelType
 from ..utils.logging import get_surveillance_logger
 
@@ -132,8 +133,8 @@ class SurveillanceOrchestrator:
         # Auto-optimisation mémoire
         memory_optimizer.auto_configure_settings()
         
-        # Gestionnaire de mémoire
-        self.memory = MemoryManager(settings.config.memory_dir / "orchestration.json")
+        # Gestionnaire de mémoire intelligent
+        self.memory = IntelligentMemoryManager(settings.config.memory_dir / "orchestration.json")
         
         # Logs de décisions
         self.decisions_log = settings.config.outputs_dir / "log_decisions.json"
@@ -287,18 +288,23 @@ class SurveillanceOrchestrator:
     ) -> SuspicionAnalysis:
         """Prend une décision basée sur l'analyse VLM."""
         try:
-            # Récupération des alertes récentes
-            recent_alerts = self.memory.get_recent_alerts(section)
-            
-            # Construction du contexte pour le LLM
+            # Construction du contexte complet
             context = {
                 "section": section,
                 "time": time_of_day,
                 "density": crowd_density,
                 "vlm_analysis": vlm_result.summary,
-                "confidence": vlm_result.confidence,
-                "last_alerts": recent_alerts
+                "confidence": vlm_result.confidence
             }
+            
+            # Récupération des alertes contextuelles intelligentes
+            contextual_alerts = self.memory.get_contextual_alerts(section, context)
+            context["last_alerts"] = contextual_alerts
+            
+            # Recommandation de modèle intelligente
+            recommended_model = self.memory.get_model_recommendation(context)
+            if recommended_model:
+                logger.info(f"💡 Modèle recommandé par l'IA: {recommended_model}")
             
             # Création et utilisation du modèle LLM
             llm = create_llm_model()
@@ -347,13 +353,16 @@ class SurveillanceOrchestrator:
         }
     
     def _save_analysis_result(self, result: Dict[str, Any]) -> None:
-        """Sauvegarde le résultat d'analyse."""
-        # Sauvegarde en mémoire
-        self.memory.save_event(result)
+        """Sauvegarde le résultat d'analyse avec apprentissage intelligent."""
+        # Construction du contexte pour l'apprentissage
+        context = {
+            "section": result.get("section"),
+            "time": "temps_analyse",  # Pourrait être enrichi
+            "density": "densité_contexte"
+        }
         
-        # Sauvegarde des alertes importantes
-        if result["decision"]["suspicion_level"] in ["medium", "high"]:
-            self.memory.save_alert(result)
+        # Sauvegarde intelligente avec apprentissage
+        self.memory.save_intelligent_event(result, context)
         
         # Log des décisions
         self._append_to_decisions_log(result)
@@ -422,10 +431,10 @@ class SurveillanceOrchestrator:
         logger.info("✅ Basculement vers SmolVLM")
     
     def get_session_stats(self) -> Dict[str, Any]:
-        """Récupère les statistiques de la session."""
+        """Récupère les statistiques de la session avec intelligence."""
         duration = datetime.now() - self.session_stats["start_time"]
         
-        return {
+        base_stats = {
             **self.session_stats,
             "session_duration": str(duration),
             "analyses_per_hour": round(
@@ -435,6 +444,24 @@ class SurveillanceOrchestrator:
                 self.session_stats["alerts_count"] / max(self.session_stats["analyses_count"], 1) * 100, 2
             )
         }
+        
+        # Ajoute les statistiques d'intelligence
+        intelligence_stats = self.memory.get_intelligence_stats()
+        base_stats.update({
+            "intelligence": intelligence_stats,
+            "memory_optimized": True
+        })
+        
+        return base_stats
+    
+    def get_section_insights(self, section: str) -> Dict[str, Any]:
+        """Récupère des insights intelligents sur une section."""
+        return self.memory.contextual_learning.get_section_insights(section)
+    
+    def optimize_contextual_memory(self):
+        """Optimise la mémoire contextuelle."""
+        self.memory.optimize_memory_usage()
+        logger.info("🧠 Mémoire contextuelle optimisée")
     
     def cleanup(self) -> None:
         """Nettoyage complet de l'orchestrateur."""

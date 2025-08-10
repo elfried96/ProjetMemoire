@@ -10,7 +10,7 @@ from transformers import AutoProcessor, AutoModelForCausalLM
 from PIL import Image
 
 from .base import BaseVLMModel, AnalysisResult
-from ..config import settings
+from ..config import settings, ModelType
 from ..utils.logging import get_surveillance_logger
 
 logger = get_surveillance_logger()
@@ -35,7 +35,7 @@ class KIMWrapper(BaseVLMModel):
         # Vérification des ressources avant chargement
         self._check_resources()
         
-        if not settings.get_model_config(settings.ModelType.KIM).enabled:
+        if not settings.get_model_config(ModelType.KIM).enabled:
             logger.info("KIM est désactivé dans la configuration")
             return
             
@@ -65,7 +65,7 @@ class KIMWrapper(BaseVLMModel):
         if self._is_loaded:
             return
             
-        if not settings.get_model_config(settings.ModelType.KIM).enabled:
+        if not settings.get_model_config(ModelType.KIM).enabled:
             raise RuntimeError(
                 "KIM est désactivé. Activez-le avec settings.enable_model(ModelType.KIM)"
             )
@@ -308,7 +308,7 @@ Format de réponse avec réflexion:
     def is_available(cls) -> bool:
         """Vérifie si KIM peut être utilisé dans l'environnement actuel."""
         return (
-            settings.get_model_config(settings.ModelType.KIM).enabled and
+            settings.get_model_config(ModelType.KIM).enabled and
             torch.cuda.is_available() and
             torch.cuda.get_device_properties(0).total_memory > 6 * (1024**3)
         )

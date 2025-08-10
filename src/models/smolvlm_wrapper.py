@@ -6,7 +6,7 @@ Implémente l'interface BaseVLMModel avec gestion mémoire intelligente.
 import torch
 import gc
 from typing import List, Optional, Dict, Any
-from transformers import AutoModelForCausalLM, AutoProcessor
+from transformers import AutoModelForImageTextToText, AutoProcessor
 from PIL import Image
 
 from .base import BaseVLMModel, AnalysisResult
@@ -46,7 +46,7 @@ class SmolVLMWrapper(BaseVLMModel):
                 trust_remote_code=True
             )
             
-            self.model = AutoModelForCausalLM.from_pretrained(
+            self.model = AutoModelForImageTextToText.from_pretrained(
                 self.model_name,
                 trust_remote_code=True,
                 torch_dtype=self.torch_dtype,
@@ -115,9 +115,13 @@ class SmolVLMWrapper(BaseVLMModel):
         try:
             logger.info(f"Analyse de {len(images)} images avec SmolVLM")
             
+            # SmolVLM nécessite des tokens <image> dans le prompt
+            image_tokens = "<image>" * len(images)
+            formatted_prompt = f"{image_tokens}\n{prompt}"
+            
             inputs = self.processor(
                 images=images,
-                text=prompt,
+                text=formatted_prompt,
                 return_tensors="pt"
             ).to(self.device)
 

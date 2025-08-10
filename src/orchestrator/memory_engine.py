@@ -117,11 +117,17 @@ class ContextualLearning:
         if stats["total_analyses"] == 0:
             return {"status": "no_data"}
         
+        # Convertir alerts en Counter si c'est un dict (après chargement JSON)
+        alerts = stats["alerts"]
+        if isinstance(alerts, dict) and not isinstance(alerts, Counter):
+            alerts = Counter(alerts)
+            stats["alerts"] = alerts
+        
         insights = {
             "total_analyses": stats["total_analyses"],
-            "most_common_alert": stats["alerts"].most_common(1)[0] if stats["alerts"] else ("none", 0),
+            "most_common_alert": alerts.most_common(1)[0] if alerts else ("none", 0),
             "average_confidence": statistics.mean(stats["confidence_scores"]) if stats["confidence_scores"] else 0.0,
-            "alert_rate": sum(stats["alerts"].values()) / stats["total_analyses"] * 100
+            "alert_rate": sum(alerts.values()) / stats["total_analyses"] * 100 if stats["total_analyses"] > 0 else 0
         }
         
         return insights

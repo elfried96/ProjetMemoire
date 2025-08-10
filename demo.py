@@ -40,12 +40,12 @@ class SurveillanceDemo:
     def display_welcome(self):
         """Affiche le message de bienvenue."""
         print("="*80)
-        print("🛡️  SURVEILLANCE ORCHESTRATOR - DÉMONSTRATION")
+        print("SURVEILLANCE ORCHESTRATOR - DÉMONSTRATION")
         print("="*80)
         print()
-        print("🎯 Système de surveillance intelligente utilisant l'IA")
-        print("📹 Analyse automatique de vidéos de surveillance")
-        print("🧠 Détection de comportements suspects avec VLM + LLM")
+        print("Système de surveillance intelligente utilisant l'IA")
+        print("Analyse automatique de vidéos de surveillance")
+        print("Détection de comportements suspects avec VLM + LLM")
         print()
         
         # Affichage de la configuration actuelle
@@ -57,13 +57,13 @@ class SurveillanceDemo:
                 primary_model = info["name"]
                 break
         
-        print(f"🤖 Modèle principal: {primary_model}")
-        print(f"💾 Mémoire nettoyée après analyse: {'Oui' if settings.config.cleanup_after_analysis else 'Non'}")
+        print(f"Modèle principal: {primary_model}")
+        print(f"Mémoire nettoyée après analyse: {'Oui' if settings.config.cleanup_after_analysis else 'Non'}")
         print()
     
     def display_menu(self):
         """Affiche le menu principal."""
-        print("📋 MENU PRINCIPAL")
+        print("MENU PRINCIPAL")
         print("-" * 30)
         print("1. Analyser une vidéo")
         print("2. Analyser toutes les vidéos de démo")
@@ -76,11 +76,11 @@ class SurveillanceDemo:
     def display_videos(self) -> bool:
         """Affiche les vidéos disponibles."""
         if not self.video_files:
-            print("❌ Aucune vidéo trouvée dans le dossier 'videos/'")
-            print("💡 Ajoutez des fichiers vidéo (.mp4, .avi, .mov, .mkv) dans ce dossier")
+            print("Aucune vidéo trouvée dans le dossier 'videos/'")
+            print("Ajoutez des fichiers vidéo (.mp4, .avi, .mov, .mkv) dans ce dossier")
             return False
         
-        print("📹 VIDÉOS DISPONIBLES:")
+        print("VIDÉOS DISPONIBLES:")
         print("-" * 30)
         for i, video in enumerate(self.video_files, 1):
             size_mb = video.stat().st_size / (1024 * 1024)
@@ -104,7 +104,7 @@ class SurveillanceDemo:
                 if 0 <= idx < len(self.video_files):
                     return self.video_files[idx]
                 else:
-                    print("❌ Choix invalide. Essayez encore.")
+                    print("Choix invalide. Essayez encore.")
                     
             except ValueError:
                 print("❌ Veuillez entrer un numéro valide.")
@@ -338,6 +338,37 @@ class SurveillanceDemo:
         print()
         print(f"💭 Raisonnement:")
         print(f"   {decision['reasoning']}")
+        
+        # Affichage des détails d'analyse si disponibles
+        if 'vlm_result' in result and result['vlm_result']:
+            vlm_result = result['vlm_result']
+            print(f"\n🔍 ANALYSE VLM DÉTAILLÉE:")
+            print("=" * 40)
+            if hasattr(vlm_result, 'thinking') and vlm_result.thinking:
+                print(f"💭 Réflexion du modèle:")
+                print(f"   {vlm_result.thinking}")
+                print()
+            if hasattr(vlm_result, 'summary') and vlm_result.summary:
+                print(f"📋 Résumé VLM:")
+                print(f"   {vlm_result.summary}")
+                print()
+            if hasattr(vlm_result, 'raw_output') and vlm_result.raw_output and vlm_result.raw_output != vlm_result.summary:
+                print(f"🤖 Sortie brute du modèle:")
+                print(f"   {vlm_result.raw_output[:500]}{'...' if len(vlm_result.raw_output) > 500 else ''}")
+                print()
+        
+        if 'llm_result' in result and result['llm_result']:
+            llm_result = result['llm_result']
+            print(f"\n🧠 ANALYSE LLM DÉTAILLÉE:")
+            print("=" * 40)
+            if hasattr(llm_result, 'thinking') and llm_result.thinking:
+                print(f"💭 Réflexion du modèle:")
+                print(f"   {llm_result.thinking}")
+                print()
+            if hasattr(llm_result, 'raw_output') and llm_result.raw_output:
+                print(f"🤖 Sortie brute du modèle:")
+                print(f"   {llm_result.raw_output[:500]}{'...' if len(llm_result.raw_output) > 500 else ''}")
+                print()
     
     def run(self):
         """Lance la démonstration interactive."""

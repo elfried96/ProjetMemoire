@@ -46,13 +46,20 @@ class Phi3Wrapper(BaseLLMModel):
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
-                torch_dtype=self.torch_dtype,
-                device_map="auto" if self.device == "cuda" else None
-            )
-            
-            if self.device != "auto":
+            # Chargement conditionnel selon le device
+            if self.device == "cuda":
+                # Utilisation de device_map pour la répartition automatique GPU
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.model_name,
+                    torch_dtype=self.torch_dtype,
+                    device_map="auto"
+                )
+            else:
+                # Chargement CPU classique
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.model_name,
+                    torch_dtype=self.torch_dtype
+                )
                 self.model = self.model.to(self.device)
             
             self._is_loaded = True
@@ -119,14 +126,14 @@ HISTORIQUE RÉCENT:
 {recent_alerts}
 
 MISSION:
-Évaluez la situation et fournissez une réponse JSON structurée UNIQUEMENT, sans autre texte.
+Analysez la situation et répondez UNIQUEMENT avec un objet JSON valide. Ne commencez pas par du texte explicatif.
 
 CRITÈRES D'ÉVALUATION:
 - Niveau de suspicion: low (aucun risque), medium (surveillance renforcée), high (intervention requise)
 - Type d'alerte: rien, observation, dissimulation, repérage, tentative_vol, comportement_suspect
 - Action: rien, surveiller_discretement, alerter_agent, intervenir, demander_renfort
 
-FORMAT DE RÉPONSE (JSON uniquement):
+VOTRE RÉPONSE DOIT ÊTRE UNIQUEMENT CE JSON (commencez directement par {):
 {{
   "suspicion_level": "low|medium|high",
   "alert_type": "rien|observation|dissimulation|repérage|tentative_vol|comportement_suspect",
@@ -207,14 +214,35 @@ FORMAT DE RÉPONSE (JSON uniquement):
             Analyse de suspicion structurée
         """
         try:
-            # Recherche du JSON dans le texte
-            json_start = text.find("{")
-            json_end = text.rfind("}") + 1
+            # Nettoyage préliminaire du texte
+            text = text.strip()
             
-            if json_start == -1 or json_end == 0:
+            # Recherche plus robuste du JSON
+            json_start = text.find("{")
+            if json_start == -1:
                 raise ValueError("Aucun JSON trouvé dans la réponse")
             
-            json_str = text[json_start:json_end]
+            # Trouve la dernière accolade fermante valide
+            bracket_count = 0
+            json_end = json_start
+            
+            for i, char in enumerate(text[json_start:], json_start):
+                if char == "{":
+                    bracket_count += 1
+                elif char == "}":
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        json_end = i + 1
+                        break
+            
+            if bracket_count != 0:
+                raise ValueError("JSON mal formé (accolades non équilibrées)")
+            
+            json_str = text[json_start:json_end].strip()
+            
+            # Nettoyage des caractères problématiques
+            json_str = json_str.replace('\n', ' ').replace('\r', ' ')
+            
             data = json.loads(json_str)
             
             # Validation et normalisation des champs

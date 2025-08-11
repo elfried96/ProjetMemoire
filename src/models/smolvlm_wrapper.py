@@ -46,14 +46,22 @@ class SmolVLMWrapper(BaseVLMModel):
                 trust_remote_code=True
             )
             
-            self.model = AutoModelForImageTextToText.from_pretrained(
-                self.model_name,
-                trust_remote_code=True,
-                torch_dtype=self.torch_dtype,
-                device_map="auto" if self.device == "cuda" else None
-            )
-            
-            if self.device != "auto":
+            # Chargement conditionnel selon le device
+            if self.device == "cuda":
+                # Utilisation de device_map pour la répartition automatique GPU
+                self.model = AutoModelForImageTextToText.from_pretrained(
+                    self.model_name,
+                    trust_remote_code=True,
+                    torch_dtype=self.torch_dtype,
+                    device_map="auto"
+                )
+            else:
+                # Chargement CPU classique
+                self.model = AutoModelForImageTextToText.from_pretrained(
+                    self.model_name,
+                    trust_remote_code=True,
+                    torch_dtype=self.torch_dtype
+                )
                 self.model = self.model.to(self.device)
             
             self._is_loaded = True
